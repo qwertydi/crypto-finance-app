@@ -1,0 +1,73 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# Generic settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Java files
+[*.java]
+indent_style = space
+indent_size = 4
+tab_width = 4
+max_line_length = 120
+insert_final_newline = true
+
+# Spring Boot properties files (application.properties)
+[*.properties]
+indent_style = space
+indent_size = 2
+charset = utf-8
+end_of_line = lf
+
+# YAML files (application.yml, etc.)
+[*.yml]
+indent_style = space
+indent_size = 2
+charset = utf-8
+end_of_line = lf
+
+# XML files (Spring configuration files, Maven POM, etc.)
+[*.xml]
+indent_style = space
+indent_size = 2
+charset = utf-8
+end_of_line = lf
+
+# JSON files (for JSON configuration, logs, etc.)
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Markdown files
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false
+
+# HTML files (e.g., Thymeleaf templates)
+[*.html]
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+
+# Ignore IntelliJ IDEA project and configuration files
+[*.iml]
+indent_style = space
+indent_size = 2
+
+# Ignore Maven wrapper properties
+[mvnw]
+indent_style = space
+indent_size = 2
+
+# Kotlin files (if you're using Kotlin in your Spring Boot project)
+[*.kt]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+insert_final_newline = true
