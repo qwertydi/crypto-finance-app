@@ -35,4 +35,17 @@ public class WalletAssetEntity {
      * Price of the specific asset
      */
     private BigDecimal price;
+
+    @Override
+    public String toString() {
+        return "WalletAssetEntity{" +
+            "id=" + id +
+            ", wallet=" + wallet.getId() +
+            ", externalId='" + externalId + '\'' +
+            ", symbol='" + symbol + '\'' +
+            ", name='" + name + '\'' +
+            ", quantity=" + quantity +
+            ", price=" + price +
+            '}';
+    }
 }
