@@ -6,7 +6,6 @@ import com.dmsc.cryptofinanceservice.model.entity.WalletAssetEntity;
 import com.dmsc.cryptofinanceservice.model.entity.WalletEntity;
 import com.dmsc.cryptofinanceservice.model.entity.WalletJobEntity;
 import com.dmsc.cryptofinanceservice.model.rest.CreateWalletRequest;
-import com.dmsc.cryptofinanceservice.repository.WalletAssetRepository;
 import com.dmsc.cryptofinanceservice.repository.WalletJobRepository;
 import com.dmsc.cryptofinanceservice.repository.WalletRepository;
 import org.modelmapper.ModelMapper;
@@ -22,17 +21,18 @@ public class WalletService {
 
     private final WalletRepository walletRepository;
     private final WalletJobRepository walletJobRepository;
-    private final WalletAssetRepository walletAssetRepository;
     private final WalletAssetService walletAssetService;
+    private final JobService jobService;
     private final ModelMapper modelMapper;
 
     public WalletService(WalletRepository walletRepository,
                          WalletJobRepository walletJobRepository,
-                         WalletAssetService walletAssetService) {
+                         WalletAssetService walletAssetService,
+                         JobService jobService) {
         this.walletRepository = walletRepository;
         this.walletJobRepository = walletJobRepository;
-        this.walletAssetRepository = walletAssetRepository;
         this.walletAssetService = walletAssetService;
+        this.jobService = jobService;
         this.modelMapper = new ModelMapper();
     }
 
@@ -54,8 +54,9 @@ public class WalletService {
                 assetEntity.setWallet(wallet);
                 assetList.add(assetEntity);
             });
-        walletAssetRepository.saveAll(assetList);
         walletAssetService.saveWalletAssetsForWallet(assetList);
+
+        jobService.addOrUpdateJob(wallet.getId(), frequency);
 
         return modelMapper.map(wallet, WalletDto.class);
     }
