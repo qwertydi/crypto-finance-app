@@ -16,6 +16,7 @@
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <coincap-java-sdk.version>0.0.1-SNAPSHOT</coincap-java-sdk.version>
+    <modelmapper.version>3.2.2</modelmapper.version>
   </properties>
 
   <dependencies>
@@ -43,6 +44,13 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.modelmapper/modelmapper -->
+    <dependency>
+      <groupId>org.modelmapper</groupId>
+      <artifactId>modelmapper</artifactId>
+      <version>${modelmapper.version}</version>
     </dependency>
 
     <!-- Dependencies related to the coincap lib -->
