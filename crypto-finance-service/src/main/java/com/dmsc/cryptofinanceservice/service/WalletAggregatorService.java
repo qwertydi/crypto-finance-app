@@ -23,9 +23,7 @@ public class WalletAggregatorService {
     }
 
     public CreateWalletResponse createWallet(CreateWalletRequest request, Duration frequency) {
-        WalletDto wallet = walletService.createWallet(frequency);
-
-        // todo user request to add coins to wallet
+        WalletDto wallet = walletService.createWallet(frequency, request);
 
         return CreateWalletResponse.builder()
             .walletId(wallet.getId())
