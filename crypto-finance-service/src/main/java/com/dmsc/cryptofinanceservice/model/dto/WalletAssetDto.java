@@ -11,9 +11,11 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CoinItemDto {
+public class WalletAssetDto {
+    private Long id;
     private String externalId;
     private String symbol;
+    private String name;
     private BigDecimal quantity;
     private BigDecimal price;
 }
