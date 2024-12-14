@@ -1,0 +1,2 @@
+com.dmsc.sboot.autoconfigure.coincapjavasdk.HttpAutoConfigure
+com.dmsc.sboot.autoconfigure.coincapjavasdk.AssetsRestSdkAutoConfiguration
