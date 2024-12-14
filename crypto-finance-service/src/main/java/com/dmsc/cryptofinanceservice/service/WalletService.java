@@ -23,14 +23,16 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final WalletJobRepository walletJobRepository;
     private final WalletAssetRepository walletAssetRepository;
+    private final WalletAssetService walletAssetService;
     private final ModelMapper modelMapper;
 
     public WalletService(WalletRepository walletRepository,
                          WalletJobRepository walletJobRepository,
-                         WalletAssetRepository walletAssetRepository) {
+                         WalletAssetService walletAssetService) {
         this.walletRepository = walletRepository;
         this.walletJobRepository = walletJobRepository;
         this.walletAssetRepository = walletAssetRepository;
+        this.walletAssetService = walletAssetService;
         this.modelMapper = new ModelMapper();
     }
 
@@ -53,6 +55,8 @@ public class WalletService {
                 assetList.add(assetEntity);
             });
         walletAssetRepository.saveAll(assetList);
+        walletAssetService.saveWalletAssetsForWallet(assetList);
+
         return modelMapper.map(wallet, WalletDto.class);
     }
 
