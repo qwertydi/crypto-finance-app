@@ -10,4 +10,6 @@ import java.util.List;
  */
 public interface CryptoProvider {
     Mono<List<CryptoItemDto>> getAssetsBySymbols(List<String> listSymbols);
+
+    Mono<List<CryptoItemDto>> getAssetsById(List<String> id);
 }
