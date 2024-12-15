@@ -224,7 +224,9 @@ public class CryptoPriceService {
             lastByExternalId = cryptoPriceRepository.findTopByExternalIdOrderByTimeDesc(externalId)
                 .orElseThrow(AssetDataNotFound::new);
         } else {
-            lastByExternalId = cryptoPriceRepository.findTopByExternalIdAndTimeOrderByTimeDesc(externalId, date)
+            lastByExternalId = cryptoPriceRepository.findTopByExternalIdAndTimeOrderByTimeDesc(externalId, date, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
                 .orElseThrow(AssetDataNotFound::new);
         }
         return getCryptoItemDto(lastByExternalId);
