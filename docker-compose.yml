@@ -15,7 +15,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_PROFILES_ACTIVE=docker
     ports:
-      - "8086:8080"
+      - "8080:8080"
 
   db:
     image: 'postgres:17.2-alpine3.21'
@@ -24,4 +24,4 @@ services:
       - POSTGRES_USER=compose-postgres
       - POSTGRES_PASSWORD=compose-postgres
     ports:
-      - "5555:5432"
+      - "5432:5432"
