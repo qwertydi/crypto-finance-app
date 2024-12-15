@@ -10,6 +10,8 @@ import com.dmsc.cryptofinanceservice.model.rest.CreateWalletResponse;
 import com.dmsc.cryptofinanceservice.model.rest.WalletItem;
 import com.dmsc.cryptofinanceservice.model.rest.WalletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -44,15 +46,17 @@ public class WalletAggregatorService {
         this.cryptoPriceService = cryptoPriceService;
     }
 
-    public CreateWalletResponse createWallet(CreateWalletRequest request, Duration frequency) {
+    public ResponseEntity<CreateWalletResponse> manageWallet(CreateWalletRequest request, Duration frequency) {
         WalletDto wallet = walletService.createWallet(frequency, request);
 
-        return CreateWalletResponse.builder()
+        CreateWalletResponse build = CreateWalletResponse.builder()
             .walletId(wallet.getId())
             .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(build);
     }
 
-    public CreateWalletResponse createWallet(String dataAsString, Duration frequency) {
+    public ResponseEntity<CreateWalletResponse> manageWallet(String dataAsString, Duration frequency) {
         List<WalletItem> entries = new ArrayList<>();
         String[] lines = dataAsString.split("\n");
 
@@ -68,10 +72,10 @@ public class WalletAggregatorService {
 
         CreateWalletRequest request = new CreateWalletRequest();
         request.setWallet(entries);
-        return createWallet(request, frequency);
+        return manageWallet(request, frequency);
     }
 
-    public WalletResponse fetchWalletInfo(String walletId, Optional<Instant> date) {
+    public ResponseEntity<WalletResponse> fetchWalletInfo(String walletId, Optional<Instant> date) {
         WalletDto wallet = walletService.findWalletById(UUID.fromString(walletId));
 
         List<WalletAssetDto> walletAssetsByWalletId = walletAssetService.findWalletAssetsByWalletId(wallet.getId());
@@ -116,6 +120,19 @@ public class WalletAggregatorService {
             shouldFetchDataByCurrentDate.forEach(i -> assetData.put(i, cryptoItemDtos.get(i.getExternalId())));
         }
 
+        WalletPerformance walletPerformance = getWalletPerformance(assetData);
+
+        WalletResponse response = WalletResponse.builder()
+            .total(walletPerformance.getTotalValue())
+            .bestPerformance(walletPerformance.getBestPerformingValue())
+            .bestAsset(walletPerformance.getBestPerformingAsset().getSymbol())
+            .worstPerformance(walletPerformance.getWorstPerformingValue())
+            .worstAsset(walletPerformance.getWorstPerformingAsset().getSymbol())
+            .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    private WalletPerformance getWalletPerformance(Map<WalletAssetDto, CryptoItemDto> assetData) {
         WalletPerformance walletPerformance = new WalletPerformance();
         assetData.forEach((itemDto, assetLatestPrice) -> {
             // Update total value
@@ -128,14 +145,7 @@ public class WalletAggregatorService {
             updateBestPerforming(walletPerformance, assetPerformance, assetLatestPrice);
             updateWorstPerforming(walletPerformance, assetPerformance, assetLatestPrice);
         });
-
-        return WalletResponse.builder()
-            .total(walletPerformance.getTotalValue())
-            .bestPerformance(walletPerformance.getBestPerformingValue())
-            .bestAsset(walletPerformance.getBestPerformingAsset().getSymbol())
-            .worstPerformance(walletPerformance.getWorstPerformingValue())
-            .worstAsset(walletPerformance.getWorstPerformingAsset().getSymbol())
-            .build();
+        return walletPerformance;
     }
 
     /**
@@ -197,5 +207,12 @@ public class WalletAggregatorService {
             walletPerformance.setWorstPerformingValue(assetPerformance);
             walletPerformance.setWorstPerformingAsset(assetLatestPrice);
         }
+    }
+
+    public ResponseEntity<Void> updateWallet(String walletId, Optional<Duration> frequency) {
+        HttpStatus httpStatus = walletService.updateWalletIdConfigurations(walletId, frequency) ?
+            HttpStatus.NO_CONTENT :
+            HttpStatus.NOT_MODIFIED;
+        return ResponseEntity.status(httpStatus).build();
     }
 }
