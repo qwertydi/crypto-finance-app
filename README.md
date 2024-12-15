@@ -47,13 +47,24 @@ Submitted request ASSET_D at 10:00:11
 - Values rounded to 2 decimal places, HALF_UP
 
 ## Questions
-
 - Question #1: frequency is a property relative to the service or to the endpoint?
 - Question #2: Should the wallet have its own id and allow to search using that id?
 - Question #3: When saving the wallet details, should the response include the calculation? Or only when the user queries the wallet to fetch the info?
 
-## Infra/Setup
+## Setup/Run
+### Run manually
+1. mvn clean package
+2. start docker container: `docker-compose up -d db`, it will start a container of postgres running on port 5432
+3. run jar: `java -jar crypto-finance-app/crypto-finance-service/target/crypto-finance-service-0.0.1-SNAPSHOT.jar`
+4. server port exposed will be 8080 by default (can be changed on application.properties file)
+
+### Start using docker-compose
+- Run the docker-compose with `docker-compose up -d`
+- container `crypto-finance-app` will contain the spring boot app running on port 8080
+- container `crypto-finance-app` will be activated using the `docker` profile
+- container `db` will run Postgres, will be accessible by the `crypto-finance-app`
 
 ## Configurations
+- Postman collection will be available on the folder `postman`
+- Docker environment will have the properties located on `crypto-finance-service/resources/application-docker.properties`
 
-## Start
