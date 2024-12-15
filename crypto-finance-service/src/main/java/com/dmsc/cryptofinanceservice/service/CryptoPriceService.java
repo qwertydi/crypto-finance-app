@@ -1,5 +1,6 @@
 package com.dmsc.cryptofinanceservice.service;
 
+import com.dmsc.cryptofinanceservice.exception.AssetDataNotFound;
 import com.dmsc.cryptofinanceservice.model.dto.CryptoItemDto;
 import com.dmsc.cryptofinanceservice.model.entity.CryptoPriceEntity;
 import com.dmsc.cryptofinanceservice.repository.CryptoPriceRepository;
@@ -24,6 +25,15 @@ public class CryptoPriceService {
         this.walletAssetService = walletAssetService;
         this.cryptoPriceRepository = cryptoPriceRepository;
         this.cryptoProvider = cryptoProvider;
+
+    private static CryptoItemDto getCryptoItemDto(CryptoPriceEntity cryptoPriceEntity) {
+        return CryptoItemDto.builder()
+            .price(cryptoPriceEntity.getPrice())
+            .name(cryptoPriceEntity.getName())
+            .id(cryptoPriceEntity.getExternalId())
+            .symbol(cryptoPriceEntity.getSymbol())
+            .price(cryptoPriceEntity.getPrice())
+            .build();
     }
 
     public void updateCryptoPrice(String cryptoAssetId) {
@@ -76,5 +86,34 @@ public class CryptoPriceService {
                 }
             });
 
+    /**
+     * Method overload from {@link CryptoPriceService#getAssetLatestPrice(String, Instant)} without date.
+     *
+     * @param externalId CryptoAsset ExternalId
+     * @return CryptoItemDto
+     */
+    public CryptoItemDto getAssetLatestPrice(String externalId) {
+        return getAssetLatestPrice(externalId, null);
+    }
+
+    /**
+     * Get latest price from database.
+     * Will allow to search using with or without date {@link Instant}
+     * Throws runtime exception {@link AssetDataNotFound} when no result is found
+     *
+     * @param externalId CryptoAsset ExternalId
+     * @param date       Instant
+     * @return CryptoItemDto
+     */
+    public CryptoItemDto getAssetLatestPrice(String externalId, Instant date) {
+        CryptoPriceEntity lastByExternalId;
+        if (date == null) {
+            lastByExternalId = cryptoPriceRepository.findTopByExternalIdOrderByTimeDesc(externalId)
+                .orElseThrow(AssetDataNotFound::new);
+        } else {
+            lastByExternalId = cryptoPriceRepository.findTopByExternalIdAndTimeOrderByTimeDesc(externalId, date)
+                .orElseThrow(AssetDataNotFound::new);
+        }
+        return getCryptoItemDto(lastByExternalId);
     }
 }
