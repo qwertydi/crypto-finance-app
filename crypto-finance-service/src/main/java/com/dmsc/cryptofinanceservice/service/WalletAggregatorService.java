@@ -80,27 +80,34 @@ public class WalletAggregatorService {
         List<WalletAssetDto> shouldFetchDataByDate = new ArrayList<>();
         List<WalletAssetDto> shouldFetchDataByCurrentDate = new ArrayList<>();
         for (WalletAssetDto itemDto : walletAssetsByWalletId) {
-            if (date.isPresent()) {
-                // Get DB result by date, or perform request
-                try {
-                    assetData.put(itemDto, cryptoPriceService.getAssetLatestPrice(itemDto.getExternalId(), date.get()));
-                } catch (AssetDataNotFound exc) {
-                    shouldFetchDataByDate.add(itemDto);
-                }
-            } else {
-                try {
-                    // Get latest DB result
+            try {
+                if (date.isPresent()) {
+                    // Fetch price by the specified date
+                    Instant targetDate = date.get();
+                    assetData.put(itemDto, cryptoPriceService.getAssetLatestPrice(itemDto.getExternalId(), targetDate));
+                } else {
+                    // Fetch the latest price
                     assetData.put(itemDto, cryptoPriceService.getAssetLatestPrice(itemDto.getExternalId()));
-                } catch (AssetDataNotFound exc) {
+                }
+            } catch (AssetDataNotFound exc) {
+                // Handle missing data by date or current date
+                if (date.isPresent()) {
+                    shouldFetchDataByDate.add(itemDto);
+                } else {
                     shouldFetchDataByCurrentDate.add(itemDto);
                 }
             }
         }
 
         if (!CollectionUtils.isEmpty(shouldFetchDataByDate)) {
-            log.info("Perform manually request by date: {}", date);
-            // todo: implement fetch crypto data by date
+            Instant targetDate = date.get();
+            log.info("Perform manually request by date: {}", targetDate);
+            Map<String, CryptoItemDto> cryptoItemDtos = cryptoPriceService.fetchWalletPricesManuallyTriggeredByDate(wallet.getId(), shouldFetchDataByDate, targetDate)
+                .stream()
+                .collect(Collectors.toMap(CryptoItemDto::getId, Function.identity()));
+            shouldFetchDataByDate.forEach(i -> assetData.put(i, cryptoItemDtos.get(i.getExternalId())));
         }
+
         if (!CollectionUtils.isEmpty(shouldFetchDataByCurrentDate)) {
             log.info("Perform manually request to get latest crypto data: {}", date);
             Map<String, CryptoItemDto> cryptoItemDtos = cryptoPriceService.fetchWalletPricesManuallyTriggered(wallet.getId(), shouldFetchDataByCurrentDate)
