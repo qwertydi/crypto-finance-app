@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -65,5 +66,22 @@ public class WalletService {
         WalletEntity wallet = walletRepository.findById(uuid)
             .orElseThrow(() -> new WalletNotFoundException("Wallet with id " + uuid + " not found"));
         return modelMapper.map(wallet, WalletDto.class);
+    }
+
+    public boolean updateWalletIdConfigurations(String walletId, Optional<Duration> frequency) {
+        if (frequency.isEmpty()) {
+            return false;
+        }
+
+        WalletDto wallet = findWalletById(UUID.fromString(walletId));
+        walletJobRepository.findByWalletId(wallet.getId())
+            .ifPresent(entity -> {
+                Duration duration = frequency.get();
+                entity.setFrequency(duration);
+                walletJobRepository.save(entity);
+                jobService.addOrUpdateJob(wallet.getId(), duration);
+            });
+
+        return true;
     }
 }
