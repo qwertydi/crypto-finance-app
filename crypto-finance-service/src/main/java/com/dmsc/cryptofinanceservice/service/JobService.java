@@ -18,7 +18,7 @@ import java.util.concurrent.ScheduledFuture;
 @Service
 public class JobService {
     private final CryptoPriceService cryptoPriceService;
-    private final TaskScheduler taskScheduler;
+    private TaskScheduler taskScheduler;
     private final Map<UUID, JobDetails> walletJobs = new HashMap<>();
     private final Instant jobStartTimeDelay;
 
@@ -32,6 +32,10 @@ public class JobService {
         ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
         threadPoolTaskScheduler.initialize();
         return threadPoolTaskScheduler;
+    }
+
+    void setTaskScheduler(TaskScheduler taskScheduler) {
+        this.taskScheduler = taskScheduler;
     }
 
     /**
