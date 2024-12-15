@@ -36,42 +36,45 @@ public class CryptoPriceService {
             .build();
     }
 
-    public void updateCryptoPrice(String cryptoAssetId) {
-        cryptoProvider.getAssetsById(Collections.singletonList(cryptoAssetId))
-            .subscribe(item -> {
-                // fetching first item, it will just fetch one asset
-                CryptoItemDto cryptoItemDto = item.getFirst();
-                log.debug("Updating crypto price: {} timestamp: {}", cryptoAssetId, cryptoItemDto.getTimestamp());
+    private CryptoPriceEntity updateCryptoPrice(String cryptoAssetId) {
+        CryptoItemDto cryptoItemDto = cryptoProvider.getAssetsById(Collections.singletonList(cryptoAssetId)).block().getFirst();
+        // fetching first item, it will just fetch one asset
+        if (cryptoItemDto == null) {
+            log.warn("No info for cryptoAssetId: {}", cryptoAssetId);
+            return null;
+        }
+        log.debug("Updating crypto price: {} timestamp: {}", cryptoAssetId, cryptoItemDto.getTimestamp());
 
-                CryptoPriceEntity cryptoPriceEntity = new CryptoPriceEntity();
-                cryptoPriceEntity.setPrice(cryptoItemDto.getPrice());
-                cryptoPriceEntity.setSymbol(cryptoItemDto.getSymbol());
-                cryptoPriceEntity.setTime(cryptoItemDto.getTimestamp());
-                cryptoPriceEntity.setExternalId(cryptoItemDto.getId());
-                cryptoPriceRepository.save(cryptoPriceEntity);
-            });
+        CryptoPriceEntity cryptoPriceEntity = new CryptoPriceEntity();
+        cryptoPriceEntity.setPrice(cryptoItemDto.getPrice());
+        cryptoPriceEntity.setSymbol(cryptoItemDto.getSymbol());
+        cryptoPriceEntity.setTime(cryptoItemDto.getTimestamp());
+        cryptoPriceEntity.setExternalId(cryptoItemDto.getId());
+        cryptoPriceEntity.setName(cryptoItemDto.getName());
+
+        log.info("End for: {}", cryptoAssetId);
+        return cryptoPriceRepository.save(cryptoPriceEntity);
     }
 
-    public void updateCryptoPriceBySymbol(UUID walletId, Long walletAssetId, String cryptoAssetSymbol) {
-        cryptoProvider.getAssetsBySymbols(Collections.singletonList(cryptoAssetSymbol))
-            .subscribe(item -> {
-                // fetching first item, it will just fetch one asset
-                CryptoItemDto cryptoItemDto = item.getFirst();
-                log.debug("Updating crypto price: {} timestamp: {}", cryptoAssetSymbol, cryptoItemDto.getTimestamp());
+    private CryptoPriceEntity updateCryptoPriceBySymbol(UUID walletId, Long walletAssetId, String cryptoAssetSymbol) {
+        CryptoItemDto cryptoItemDto = cryptoProvider.getAssetsBySymbols(Collections.singletonList(cryptoAssetSymbol)).block().getFirst();
+        // fetching first item, it will just fetch one asset
+        log.debug("Updating crypto price: {} timestamp: {}", cryptoAssetSymbol, cryptoItemDto.getTimestamp());
 
-                CryptoPriceEntity cryptoPriceEntity = new CryptoPriceEntity();
-                cryptoPriceEntity.setPrice(cryptoItemDto.getPrice());
-                cryptoPriceEntity.setSymbol(cryptoItemDto.getSymbol());
-                cryptoPriceEntity.setTime(cryptoItemDto.getTimestamp());
-                cryptoPriceEntity.setExternalId(cryptoItemDto.getId());
-                cryptoPriceRepository.save(cryptoPriceEntity);
+        CryptoPriceEntity cryptoPriceEntity = new CryptoPriceEntity();
+        cryptoPriceEntity.setPrice(cryptoItemDto.getPrice());
+        cryptoPriceEntity.setSymbol(cryptoItemDto.getSymbol());
+        cryptoPriceEntity.setTime(cryptoItemDto.getTimestamp());
+        cryptoPriceEntity.setExternalId(cryptoItemDto.getId());
+        CryptoPriceEntity save = cryptoPriceRepository.save(cryptoPriceEntity);
 
-                // Update asset external id to allow to use coincap find by id API
-                if (walletId != null && walletAssetId != null) {
-                    walletAssetService.updateWalletAsset(walletId, walletAssetId, cryptoItemDto);
-                }
+        // Update asset external id to allow to use coincap find by id API
+        if (walletId != null && walletAssetId != null) {
+            walletAssetService.updateWalletAsset(walletId, walletAssetId, cryptoItemDto);
+        }
 
-            });
+        log.info("End for: {}", cryptoItemDto.getId());
+        return save;
     }
 
     public void fetchWalletPrices(UUID walletId) {
