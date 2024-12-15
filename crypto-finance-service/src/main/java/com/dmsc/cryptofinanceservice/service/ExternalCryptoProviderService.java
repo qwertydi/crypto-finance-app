@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -62,12 +63,13 @@ public class ExternalCryptoProviderService implements CryptoProvider {
     }
 
     @Override
-    public Mono<CryptoHistoryDto> getAssetByIdAtGivenDate(String id, Instant start, Instant end) {
+    public Mono<CryptoHistoryDto> getAssetByIdAtGivenDate(String id, Instant date) {
         CryptoHistoryRequest request = new CryptoHistoryRequest();
-        // 1 Hour should be enough to fetch data for a given crypto coin on a given day
-        request.setDuration(IntervalValue.H1);
-        request.setStart(start);
-        request.setEnd(end);
+        // Find Date in 1 Minute Intervals to match minute timestamp
+        request.setDuration(IntervalValue.M1);
+        // To use M1 we only are able to search with 1 day or less periods
+        request.setStart(date.minus(5, ChronoUnit.MINUTES));
+        request.setEnd(date.plus(5, ChronoUnit.MINUTES));
         return assetsReactiveSdk.getHistoryByAssetAsync(id, request)
             .map(item -> {
                 CryptoHistoryDto cryptoHistoryDto = new CryptoHistoryDto();
