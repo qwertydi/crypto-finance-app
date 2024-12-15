@@ -30,6 +30,7 @@ public class CryptoPriceService {
     private final WalletAssetService walletAssetService;
     private final CryptoPriceRepository cryptoPriceRepository;
     private final CryptoProvider cryptoProvider;
+    private final CryptoCachingService cryptoCachingService;
 
     // configurable value for max number of threads per wallet
     private final int numberOfThreadsPerWallet;
@@ -40,11 +41,13 @@ public class CryptoPriceService {
     public CryptoPriceService(WalletAssetService walletAssetService,
                               CryptoPriceRepository cryptoPriceRepository,
                               CryptoProvider cryptoProvider,
-                              WalletRequestProperties walletRequestProperties) {
+                              CryptoCachingService cryptoCachingService, WalletRequestProperties walletRequestProperties) {
         this.walletAssetService = walletAssetService;
         this.cryptoPriceRepository = cryptoPriceRepository;
         this.cryptoProvider = cryptoProvider;
+        this.cryptoCachingService = cryptoCachingService;
         this.numberOfThreadsPerWallet = walletRequestProperties.getNumberOfThreads();
+        populateCacheWithExistingCryptoData();
     }
 
     private static CryptoItemDto getCryptoItemDto(CryptoPriceEntity cryptoPriceEntity) {
@@ -77,6 +80,21 @@ public class CryptoPriceService {
         return cryptoPriceRepository.save(cryptoPriceEntity);
     }
 
+    /**
+     * Method responsible to fetch all unique data from {@link CryptoPriceEntity} and populate cache
+     */
+    private void populateCacheWithExistingCryptoData() {
+        List<CryptoPriceEntity> allUniqueExternalIds = this.cryptoPriceRepository.findDistinctEntities();
+        if (!CollectionUtils.isEmpty(allUniqueExternalIds)) {
+            allUniqueExternalIds.forEach(existingUniqueEntities ->
+                this.cryptoCachingService.addToCache(
+                    existingUniqueEntities.getExternalId(),
+                    existingUniqueEntities.getName(),
+                    existingUniqueEntities.getSymbol()
+                ));
+        }
+    }
+
     private CryptoPriceEntity updateCryptoPriceBySymbol(UUID walletId, Long walletAssetId, String cryptoAssetSymbol) {
         CryptoItemDto cryptoItemDto = cryptoProvider.getAssetsBySymbols(Collections.singletonList(cryptoAssetSymbol)).block().getFirst();
         // fetching first item, it will just fetch one asset
@@ -87,11 +105,14 @@ public class CryptoPriceService {
         cryptoPriceEntity.setSymbol(cryptoItemDto.getSymbol());
         cryptoPriceEntity.setTime(cryptoItemDto.getTimestamp());
         cryptoPriceEntity.setExternalId(cryptoItemDto.getId());
+        cryptoPriceEntity.setName(cryptoItemDto.getName());
+
         CryptoPriceEntity save = cryptoPriceRepository.save(cryptoPriceEntity);
 
         // Update asset external id to allow to use coincap find by id API
         if (walletId != null && walletAssetId != null) {
             walletAssetService.updateWalletAsset(walletId, walletAssetId, cryptoItemDto);
+            cryptoCachingService.addToCache(cryptoItemDto.getId(), cryptoItemDto.getName(), cryptoAssetSymbol);
         }
 
         log.info("End for: {}", cryptoItemDto.getId());
