@@ -62,11 +62,11 @@ public class WebClientAssetsRestSdk implements AssetsReactiveSdk {
             .uri(uriBuilder -> {
                 UriBuilder path = uriBuilder.path("/assets/" + id + "/history");
                 Optional.ofNullable(params.getDuration())
-                    .ifPresent(d -> path.queryParam("interval", d.name()));
+                    .ifPresent(d -> path.queryParam("interval", d.name().toLowerCase()));
                 Optional.ofNullable(params.getStart())
-                    .ifPresent(start -> path.queryParam("start", start));
+                    .ifPresent(start -> path.queryParam("start", start.toEpochMilli()));
                 Optional.ofNullable(params.getEnd())
-                    .ifPresent(end -> path.queryParam("end", end));
+                    .ifPresent(end -> path.queryParam("end", end.toEpochMilli()));
                 return path.build();
             })
             .accept(MediaType.APPLICATION_JSON)
