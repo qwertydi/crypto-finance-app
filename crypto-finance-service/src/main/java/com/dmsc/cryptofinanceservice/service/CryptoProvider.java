@@ -15,5 +15,5 @@ public interface CryptoProvider {
 
     Mono<List<CryptoItemDto>> getAssetsById(List<String> id);
 
-    Mono<CryptoHistoryDto> getAssetByIdAtGivenDate(String id, Instant start, Instant end);
+    Mono<CryptoHistoryDto> getAssetByIdAtGivenDate(String id, Instant date);
 }
