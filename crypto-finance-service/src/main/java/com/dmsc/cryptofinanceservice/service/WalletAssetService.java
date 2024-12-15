@@ -33,6 +33,8 @@ public class WalletAssetService {
                     .externalId(asset.getExternalId())
                     .symbol(asset.getSymbol())
                     .name(asset.getName())
+                    .quantity(asset.getQuantity())
+                    .price(asset.getPrice())
                     .build())
             .toList();
     }
